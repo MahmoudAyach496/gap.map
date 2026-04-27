@@ -172,5 +172,5 @@ Returns papers, sources used, semantic query metadata, and generated gap nodes.
 
 ## Author
 
-Mahmoud Ayache  
+Mahmoud Ayach
 [github.com/MahmoudAyach496](https://github.com/MahmoudAyach496)
