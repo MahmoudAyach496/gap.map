@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gap.map</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fbfaf7;--bg2:#f5f3ee;--bg3:#ffffff;--bg-hover:#f0ede6;
+  --border:rgba(15,15,15,0.08);--border2:rgba(15,15,15,0.14);--border3:rgba(15,15,15,0.22);
+  --text:#1f1f1c;--text2:#5a594f;--text3:#8b8a7e;--text4:#b8b6a7;
+  --blue:#3478c2;--blue-soft:#e6efff;
+  --green:#2d9462;--green-soft:#e7f4ec;
+  --coral:#d05a3a;--coral-soft:#fbe9e2;
+  --purple:#7c5cd1;--purple-soft:#ece6fb;
+  --amber:#c98a1b;--amber-soft:#fbf2dd;
+  --shadow-sm:0 1px 2px rgba(15,15,15,0.04);
+  --shadow-md:0 2px 8px rgba(15,15,15,0.06);
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'IBM Plex Sans',-apple-system,system-ui,sans-serif;
+  --serif:'IBM Plex Serif',Georgia,serif;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+
+/* ────── ONBOARDING ────── */
+#onboarding{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;flex-direction:column;overflow:hidden;transition:opacity 0.4s}
+#onboarding.fade{opacity:0;pointer-events:none}
+.ob-header{padding:18px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:var(--bg)}
+.ob-logo{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text)}
+.ob-logo span{color:var(--coral)}
+.ob-step{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;align-items:center;gap:8px}
+.ob-step-dot{width:6px;height:6px;border-radius:50%;background:var(--text4)}
+.ob-step-dot.active{background:var(--coral)}
+.ob-step-dot.done{background:var(--green)}
+.ob-body{flex:1;overflow:hidden;display:grid;grid-template-columns:1fr 380px}
+.ob-chat{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.ob-chat-inner{max-width:720px;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ob-intro{padding:48px 48px 24px}
+.ob-intro h1{font-family:var(--serif);font-weight:400;font-size:32px;line-height:1.25;color:var(--text);margin-bottom:12px;letter-spacing:-0.01em}
+.ob-intro h1 em{font-style:italic;color:var(--coral)}
+.ob-intro p{font-size:15px;line-height:1.65;color:var(--text2);max-width:580px}
+.ob-messages{flex:1;overflow-y:auto;padding:8px 48px 24px;display:flex;flex-direction:column;gap:18px}
+.ob-msg{font-size:14px;line-height:1.7;animation:fadeIn 0.4s}
+.ob-msg.agent{display:flex;gap:14px}
+.ob-msg.agent .avatar{width:28px;height:28px;border-radius:6px;flex-shrink:0;background:var(--coral-soft);color:var(--coral);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;margin-top:2px}
+.ob-msg.agent .body{flex:1;color:var(--text)}
+.ob-msg.agent .body code{font-family:var(--mono);font-size:12px;background:var(--bg2);padding:1px 6px;border-radius:3px;color:var(--text)}
+.ob-msg.user{align-self:flex-end;max-width:75%;background:var(--coral-soft);color:var(--text);padding:10px 14px;border-radius:12px;border-top-right-radius:4px;font-size:14px}
+.ob-msg.system{font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center;border:1px solid var(--border);padding:6px 10px;border-radius:4px;background:var(--bg2);align-self:center}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.ob-tool-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:8px;box-shadow:var(--shadow-sm)}
+.ob-tool-card-head{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ob-tool-icon{width:14px;height:14px;border-radius:3px;background:var(--purple-soft);display:inline-flex;align-items:center;justify-content:center;color:var(--purple);font-size:10px;font-weight:600}
+.ob-tool-card-body{font-family:var(--mono);font-size:12px;color:var(--text);line-height:1.65}
+.ob-tool-card-body .key{color:var(--text3)}
+.ob-tool-card-body .val{color:var(--blue)}
+.ob-tool-card-body .val-q{color:var(--green)}
+.ob-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ob-sug{font-size:12px;padding:5px 10px;border-radius:14px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);cursor:pointer;transition:all 0.15s}
+.ob-sug:hover{background:var(--bg-hover);color:var(--text)}
+.ob-input-area{padding:16px 48px 32px;border-top:1px solid var(--border);background:var(--bg)}
+.ob-input-wrap{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow-sm)}
+.ob-input-wrap:focus-within{border-color:var(--text3)}
+.ob-input{width:100%;border:none;outline:none;background:transparent;resize:none;font-family:var(--sans);font-size:14px;color:var(--text);line-height:1.6;height:48px}
+.ob-input::placeholder{color:var(--text3)}
+.ob-input-actions{display:flex;align-items:center;gap:8px}
+.ob-mcp-badge{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;background:var(--purple-soft);color:var(--purple);display:flex;align-items:center;gap:5px}
+.ob-mcp-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--purple);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.ob-send{margin-left:auto;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:5px;border:none;background:var(--text);color:var(--bg);cursor:pointer}
+.ob-send:disabled{background:var(--text4);cursor:not-allowed}
+.ob-side{background:var(--bg2);overflow-y:auto;padding:32px 28px}
+.ob-side h3{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px}
+.ob-side h3:not(:first-child){margin-top:28px}
+.ob-spec-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border);font-size:13px}
+.ob-spec-row:last-child{border-bottom:none}
+.ob-spec-row .k{color:var(--text3);font-family:var(--mono);font-size:11px}
+.ob-spec-row .v{color:var(--text);font-weight:500;text-align:right;max-width:180px}
+.ob-spec-row .v.empty{color:var(--text4);font-weight:400;font-style:italic}
+.ob-spec-row .v.fresh{color:var(--green)}
+.ob-pill-list{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
+.ob-pill{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:10px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.ob-pill.active{background:var(--coral-soft);color:var(--coral);border-color:transparent}
+.ob-progress{margin-top:24px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px}
+.ob-progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:10px}
+.ob-progress-fill{height:100%;background:var(--coral);width:0%;transition:width 0.5s}
+.ob-progress-text{font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;justify-content:space-between}
+.ob-launch{margin-top:14px;width:100%;padding:11px;border:none;background:var(--coral);color:#fff;border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer}
+.ob-launch:disabled{background:var(--text4);cursor:not-allowed}
+
+/* ────── MAIN APP ────── */
+#app{display:none;position:fixed;inset:0}
+body.ready #app{display:block}
+body.ready #onboarding{display:none}
+
+#stage{position:fixed;inset:48px 320px 0 0;z-index:0;background:var(--bg)}
+#canvas-3d,#canvas-2d,#canvas-city{position:absolute;inset:0;width:100%;height:100%;display:none}
+.mode-graph3d #canvas-3d{display:block}
+.mode-graph2d #canvas-2d{display:block}
+.mode-city #canvas-city{display:block}
+.mode-city #stage{background:linear-gradient(180deg,#f5f3ee 0%,#ebe9e0 100%)}
+
+header.app-header{position:fixed;top:0;left:0;right:0;height:48px;display:flex;align-items:center;padding:0 18px;gap:14px;background:var(--bg);border-bottom:1px solid var(--border);z-index:10}
+.logo{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text)}
+.logo span{color:var(--coral)}
+.viewmode{display:flex;border:1px solid var(--border2);border-radius:5px;overflow:hidden;background:var(--bg3)}
+.vbtn{font-family:var(--mono);font-size:11px;padding:5px 11px;background:transparent;color:var(--text3);cursor:pointer;border:none;transition:all 0.15s}
+.vbtn:hover{color:var(--text)}
+.vbtn.active{background:var(--text);color:var(--bg)}
+.filters{display:flex;gap:4px}
+.fbtn{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;transition:all 0.15s}
+.fbtn:hover{color:var(--text);background:var(--bg-hover)}
+.fbtn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.upload-btn{font-family:var(--mono);font-size:11px;padding:5px 11px;background:var(--coral-soft);color:var(--coral);border:1px solid transparent;border-radius:5px;cursor:pointer}
+.upload-btn:hover{background:#f5dccd}
+.hstats{margin-left:auto;display:flex;gap:14px}
+.hstat{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.hstat b{color:var(--text);font-weight:500}
+
+#sidebar{position:fixed;top:48px;right:0;bottom:0;width:320px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
+.stabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg)}
+.stab{flex:1;font-family:var(--mono);font-size:11px;padding:11px 4px;text-align:center;color:var(--text3);cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent}
+.stab:hover{color:var(--text)}
+.stab.active{color:var(--text);border-bottom-color:var(--coral)}
+.tab-pane{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0}
+.tab-pane.active{display:flex}
+
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.msg{font-size:12px;line-height:1.7;padding:10px 12px;border-radius:6px}
+.msg.user{background:var(--coral-soft);color:var(--text);font-size:12px;align-self:flex-end;max-width:90%}
+.msg.assistant{background:var(--bg3);border:1px solid var(--border);color:var(--text)}
+.msg.assistant .mlabel{font-family:var(--mono);font-size:10px;color:var(--coral);margin-bottom:5px;display:block}
+.msg.system{background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-family:var(--mono);font-size:10px;text-align:center}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.loading::after{content:'▋';animation:blink 1s infinite}
+.themes-bar{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.theme-chip{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:10px;background:var(--purple-soft);color:var(--purple)}
+
+.parea{padding:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.pinput{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:12px;padding:8px 10px;resize:none;height:62px;outline:none;line-height:1.6}
+.pinput:focus{border-color:var(--text3)}
+.pactions{display:flex;gap:5px;flex-wrap:wrap}
+.sbtn{font-family:var(--mono);font-size:11px;padding:6px 13px;background:var(--text);color:var(--bg);border:none;border-radius:4px;cursor:pointer}
+.sbtn:disabled{background:var(--text4);cursor:not-allowed}
+.qbtn{font-family:var(--mono);font-size:10px;padding:4px 8px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:3px;cursor:pointer}
+.qbtn:hover{color:var(--text)}
+
+.expanel{flex:1;overflow-y:auto;padding:16px;min-height:0}
+.exsec{margin-bottom:18px}
+.exlabel{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;display:flex;justify-content:space-between}
+.ncard{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 11px;cursor:pointer;margin-bottom:5px;transition:all 0.15s}
+.ncard:hover{border-color:var(--border2);transform:translateX(2px);box-shadow:var(--shadow-sm)}
+.ncard.sel{border-color:var(--coral)}
+.ncard-title{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;line-height:1.4}
+.ncard-meta{font-size:11px;color:var(--text3);font-family:var(--mono)}
+
+#sel-detail{padding:14px;border-top:1px solid var(--border);display:none;background:var(--bg3)}
+#sel-detail.vis{display:block}
+.dtitle{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
+.dbody{font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.dact{font-family:var(--mono);font-size:10px;padding:5px 10px;background:var(--text);color:var(--bg);border:none;border-radius:3px;cursor:pointer}
+
+.grants-filters{display:flex;gap:4px;padding:10px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--bg)}
+.gfilter{font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:3px;border:1px solid var(--border);background:var(--bg3);color:var(--text3);cursor:pointer}
+.gfilter.active{background:var(--green-soft);color:var(--green);border-color:transparent}
+.grant-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:11px 13px;margin-bottom:8px;cursor:pointer}
+.grant-card.match{border-color:var(--green);background:var(--green-soft)}
+.grant-flag{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.grant-title{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--text);margin-bottom:5px;line-height:1.4}
+.grant-amount{font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:6px;font-weight:500}
+.grant-themes{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+.gtheme{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--purple-soft);color:var(--purple)}
+.grant-deadline{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.match-badge{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;background:var(--green);color:#fff}
+
+.legend{padding:10px 14px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;background:var(--bg)}
+.leg{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.ldot{width:8px;height:8px;border-radius:50%}
+.lsq{width:8px;height:8px;border-radius:1px}
+
+#tooltip{position:fixed;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:12px;pointer-events:none;opacity:0;transition:opacity 0.12s;max-width:240px;line-height:1.6;z-index:30;box-shadow:var(--shadow-md)}
+.tttitle{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px}
+.ttbody{color:var(--text2);font-size:11px}
+.tttype{font-family:var(--mono);font-size:9px;margin-top:6px;padding:2px 6px;border-radius:3px;display:inline-block}
+.ttstats{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--text3);display:flex;gap:10px}
+
+#hint{position:fixed;bottom:18px;left:18px;font-family:var(--mono);font-size:10px;color:var(--text3);line-height:1.7;z-index:5;background:var(--bg3);padding:8px 11px;border-radius:5px;border:1px solid var(--border);box-shadow:var(--shadow-sm);pointer-events:none}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ════ ONBOARDING ════ -->
+<div id="onboarding">
+  <div class="ob-header">
+    <div class="ob-logo">gap<span>.</span>map</div>
+    <div class="ob-step">
+      <div class="ob-step-dot active" id="dot-1"></div><span id="step-label">interview</span>
+      <div class="ob-step-dot" id="dot-2"></div><span style="color:var(--text4)">build queries</span>
+      <div class="ob-step-dot" id="dot-3"></div><span style="color:var(--text4)">fetch papers</span>
+    </div>
+  </div>
+  <div class="ob-body">
+    <div class="ob-chat">
+      <div class="ob-chat-inner">
+        <div class="ob-intro">
+          <h1>let's build your <em>knowledge graph</em>.</h1>
+          <p>I'm a research agent. Tell me what you're working on. I'll figure out the right semantic queries, fetch real papers from arXiv and OpenAlex, and stage them as a navigable graph of ideas, gaps, and collisions.</p>
+        </div>
+        <div class="ob-messages" id="ob-messages">
+          <div class="ob-msg agent">
+            <div class="avatar">ai</div>
+            <div class="body">
+              First — what problem are you trying to make sense of?
+              <div class="ob-suggestions">
+                <button class="ob-sug" onclick="useSuggestion('Researching orbital debris remediation and finding unsolved gaps')">orbital debris gaps</button>
+                <button class="ob-sug" onclick="useSuggestion('Looking at deep ocean sustainability and biodiversity')">deep ocean sustainability</button>
+                <button class="ob-sug" onclick="useSuggestion('Materials science meets extreme environments')">materials × extremes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ob-input-area">
+          <div class="ob-input-wrap">
+            <textarea class="ob-input" id="ob-input" placeholder="describe your research focus..."></textarea>
+            <div class="ob-input-actions">
+              <span class="ob-mcp-badge">arxiv mcp connected</span>
+              <span class="ob-mcp-badge" style="background:var(--blue-soft);color:var(--blue)">openalex mcp connected</span>
+              <button class="ob-send" id="ob-send" onclick="obSend()">send →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ob-side">
+      <h3>research spec</h3>
+      <div class="ob-spec-row"><span class="k">domain</span><span class="v empty" id="spec-domain">not set</span></div>
+      <div class="ob-spec-row"><span class="k">focus</span><span class="v empty" id="spec-focus">not set</span></div>
+      <div class="ob-spec-row"><span class="k">year range</span><span class="v empty" id="spec-year">not set</span></div>
+      <div class="ob-spec-row"><span class="k">themes</span><span class="v"><div class="ob-pill-list" id="spec-themes"><span class="v empty">tbd</span></div></span></div>
+      <h3>queries</h3>
+      <div class="ob-spec-row"><span class="k">arxiv query</span><span class="v empty" id="spec-arxiv-q">building...</span></div>
+      <div class="ob-spec-row"><span class="k">openalex search</span><span class="v empty" id="spec-openalex-q">building...</span></div>
+      <h3>pydantic validation</h3>
+      <div class="ob-spec-row"><span class="k">model</span><span class="v" style="font-size:11px">Paper · SearchQuery</span></div>
+      <div class="ob-spec-row"><span class="k">coercion</span><span class="v" style="color:var(--green);font-size:11px">enabled</span></div>
+      <div class="ob-progress">
+        <div class="ob-progress-text">
+          <span id="progress-label">describe your focus to begin</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="ob-progress-bar"><div class="ob-progress-fill" id="progress-fill"></div></div>
+        <button class="ob-launch" id="ob-launch" disabled onclick="launchApp()">launch graph</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MAIN APP ════ -->
+<div id="app">
+  <header class="app-header">
+    <div class="logo">gap<span>.</span>map</div>
+    <div class="viewmode">
+      <button class="vbtn active" id="vb-graph3d" onclick="setMode('graph3d')">graph 3D</button>
+      <button class="vbtn" id="vb-graph2d" onclick="setMode('graph2d')">graph 2D</button>
+      <button class="vbtn" id="vb-city" onclick="setMode('city')">city</button>
+    </div>
+    <div class="filters">
+      <button class="fbtn active" onclick="setFilter('all',this)">all</button>
+      <button class="fbtn" onclick="setFilter('space',this)">space</button>
+      <button class="fbtn" onclick="setFilter('ocean',this)">ocean</button>
+      <button class="fbtn" onclick="setFilter('gaps',this)">gaps</button>
+    </div>
+    <button class="upload-btn">+ add paper</button>
+    <div class="hstats">
+      <div class="hstat"><b id="sn">0</b> nodes</div>
+      <div class="hstat"><b id="sg">0</b> gaps</div>
+      <div class="hstat"><b id="sl">0</b> labs</div>
+    </div>
+  </header>
+
+  <div id="stage">
+    <div id="canvas-3d"></div>
+    <canvas id="canvas-2d"></canvas>
+    <div id="canvas-city"></div>
+  </div>
+
+  <div id="tooltip">
+    <div class="tttitle" id="tt-title"></div>
+    <div class="ttbody" id="tt-body"></div>
+    <span class="tttype" id="tt-type"></span>
+    <div class="ttstats" id="tt-stats" style="display:none"></div>
+  </div>
+
+  <div id="hint">drag — orbit · scroll — zoom · click — inspect</div>
+
+  <div id="sidebar">
+    <div class="stabs">
+      <button class="stab active" onclick="switchTab('prompt',this)">prompt</button>
+      <button class="stab" onclick="switchTab('info',this)">explorer</button>
+      <button class="stab" onclick="switchTab('grants',this)">grants</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-prompt">
+      <div class="msgs" id="messages">
+        <div class="msg system">graph populated · semantic activation enabled</div>
+      </div>
+      <div class="parea">
+        <textarea class="pinput" id="pinput" placeholder="ask about themes, authors, gaps..."></textarea>
+        <div class="pactions">
+          <button class="sbtn" onclick="doSend()">send →</button>
+          <button class="qbtn" onclick="qp('Show all knowledge gaps')">show gaps</button>
+          <button class="qbtn" onclick="qp('Find cross-domain bridges')">bridges</button>
+          <button class="qbtn" onclick="qp('Which work is duplicated?')">duplicates</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-info">
+      <div class="expanel">
+        <div class="exsec"><div class="exlabel">research labs <span id="labs-count">0</span></div><div id="labs-list"></div></div>
+        <div class="exsec"><div class="exlabel">knowledge gaps <span id="gaps-count">0</span></div><div id="gaps-list"></div></div>
+        <div class="exsec"><div class="exlabel">bridges <span id="bridges-count">0</span></div><div id="bridges-list"></div></div>
+      </div>
+      <div id="sel-detail">
+        <div class="dtitle" id="d-title"></div>
+        <div class="dbody" id="d-body"></div>
+        <button class="dact" id="d-act">explore →</button>
+      </div>
+      <div class="legend">
+        <div class="leg"><div class="lsq" style="background:var(--blue-soft);border:1px solid var(--blue)"></div>lab</div>
+        <div class="leg"><div class="ldot" style="background:var(--blue)"></div>space</div>
+        <div class="leg"><div class="ldot" style="background:var(--green)"></div>ocean</div>
+        <div class="leg"><div class="ldot" style="background:var(--coral)"></div>gap</div>
+        <div class="leg"><div class="ldot" style="background:var(--purple)"></div>bridge</div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-grants">
+      <div class="grants-filters">
+        <button class="gfilter active" onclick="filterGrants('all',this)">all</button>
+        <button class="gfilter" onclick="filterGrants('UK',this)">🇬🇧 UK</button>
+        <button class="gfilter" onclick="filterGrants('US',this)">🇺🇸 US</button>
+        <button class="gfilter" onclick="filterGrants('EU',this)">🇪🇺 EU</button>
+        <button class="gfilter" onclick="filterGrants('JP',this)">🇯🇵 JP</button>
+      </div>
+      <div class="expanel" id="grants-list"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ════ DATA ════
+const LABS_DATA = [
+  {id:'lab0',label:'ESA Space Debris\nResearch Centre',type:'lab',domain:'space',papers:[0,1,2],desc:'European Space Agency lab focused on orbital debris.',year:2018,depth:0.9,themes:['debris','orbital','tracking'],gridX:-3,gridZ:-3},
+  {id:'lab1',label:'MIT Materials\nLab',type:'lab',domain:'space',papers:[3,4],desc:'Radiation-hardened materials.',year:2015,depth:0.7,themes:['radiation','materials'],gridX:3,gridZ:-3},
+  {id:'lab2',label:'JAMSTEC Deep\nOcean Research',type:'lab',domain:'ocean',papers:[5,6],desc:'Deep ocean pressure modelling.',year:2010,depth:0.2,themes:['pressure','ocean'],gridX:-3,gridZ:3},
+  {id:'lab3',label:'Woods Hole\nOceanographic',type:'lab',domain:'ocean',papers:[7,8],desc:'Autonomous navigation, biofouling.',year:2012,depth:0.15,themes:['navigation','biofouling'],gridX:3,gridZ:3},
+];
+
+const PAPERS_DATA = [
+  {id:0,label:'Debris tracking\nradar fusion',type:'space',domain:'space',desc:'Orbital debris tracking using radar fusion.',year:2023,depth:0.85,citations:89,style:'tower',themes:['debris','tracking','radar']},
+  {id:1,label:'Collision avoidance\nML model',type:'space',domain:'space',desc:'ML for collision probability prediction.',year:2024,depth:0.82,citations:34,style:'office',themes:['collision','ML']},
+  {id:2,label:'Active debris\nremoval review',type:'space',domain:'space',desc:'Review of remediation strategies post-2022.',year:2023,depth:0.88,citations:120,style:'tower',themes:['remediation','debris']},
+  {id:3,label:'Radiation\ndamage in alloys',type:'space',domain:'space',desc:'5-year longitudinal study of radiation degradation.',year:2022,depth:0.75,citations:67,style:'office',themes:['radiation','materials']},
+  {id:4,label:'Shielding\ndesign GAP',type:'gap',domain:'space',desc:'GAP: No paper connects radiation damage to shielding design.',year:2024,depth:0.78,style:'plot',themes:['shielding','radiation','gap']},
+  {id:5,label:'Deep sea\npressure models',type:'ocean',domain:'ocean',desc:'Structural behaviour at 6km depth.',year:2023,depth:0.1,citations:45,style:'office',themes:['pressure','depth']},
+  {id:6,label:'Hydrothermal vent\nbiology',type:'ocean',domain:'ocean',desc:'Biodiversity around hydrothermal vents.',year:2024,depth:0.08,citations:28,style:'office',themes:['biodiversity','vents']},
+  {id:7,label:'Biofouling\nprevention',type:'ocean',domain:'ocean',desc:'Material coatings for ocean sensors.',year:2023,depth:0.12,citations:52,style:'office',themes:['biofouling','sensors']},
+  {id:8,label:'Acoustic\nnavigation GAP',type:'gap',domain:'both',desc:'GAP: Solutions developed independently across teams.',year:2024,depth:0.45,style:'plot',themes:['navigation','acoustic','gap']},
+  {id:9,label:'Extreme env.\nbridge',type:'bridge',domain:'both',desc:'BRIDGE: Pressure + radiation damage = same fatigue patterns.',year:2024,depth:0.5,style:'bridge',themes:['extreme','bridge','fatigue']},
+];
+
+const EDGES = [
+  [0,1,'cites'],[0,2,'cites'],[3,4,'gap'],[2,4,'gap'],
+  [5,9,'bridge'],[3,9,'bridge'],[5,6,'cites'],[7,8,'gap'],
+  ['lab0',0,'contains'],['lab0',1,'contains'],['lab0',2,'contains'],
+  ['lab1',3,'contains'],['lab1',4,'contains'],
+  ['lab2',5,'contains'],['lab2',6,'contains'],
+  ['lab3',7,'contains'],['lab3',8,'contains'],
+];
+
+const GRANTS_DATA = [
+  {id:'g0',country:'UK',flag:'🇬🇧',agency:'UKRI',title:'STFC Space CDT',amount:'£8.4M',deadline:'2026-09-12',themes:['space','satellite','debris','orbital'],desc:'PhD training in space research.'},
+  {id:'g1',country:'UK',flag:'🇬🇧',agency:'NERC',title:'Deep Sea Research Programme',amount:'£12.2M',deadline:'2026-06-30',themes:['ocean','deep-sea','pressure','sensors'],desc:'Deep ocean exploration & sensors.'},
+  {id:'g2',country:'US',flag:'🇺🇸',agency:'NASA',title:'Orbital Debris Remediation Fund',amount:'$24M',deadline:'2026-11-30',themes:['debris','orbital','remediation'],desc:'Active debris remediation funding.'},
+  {id:'g3',country:'US',flag:'🇺🇸',agency:'NSF',title:'Ocean Observatories Initiative',amount:'$18M',deadline:'2026-07-15',themes:['ocean','sensors','biofouling'],desc:'Autonomous ocean monitoring.'},
+  {id:'g4',country:'EU',flag:'🇪🇺',agency:'ESA',title:'Space Safety Programme',amount:'€42M',deadline:'2026-10-01',themes:['debris','collision','tracking'],desc:'Collision avoidance research.'},
+  {id:'g5',country:'EU',flag:'🇪🇺',agency:'Horizon Europe',title:'Mission Ocean 2030',amount:'€350M',deadline:'2026-04-25',themes:['ocean','marine','biodiversity'],desc:'Deep ocean exploration mission.'},
+  {id:'g6',country:'JP',flag:'🇯🇵',agency:'JAXA',title:'Space Innovation Programme',amount:'¥4.2B',deadline:'2026-12-15',themes:['space','autonomous','debris'],desc:'Spacecraft systems & debris.'},
+  {id:'g7',country:'JP',flag:'🇯🇵',agency:'JAMSTEC',title:'Deep Sea Exploration Grant',amount:'¥2.8B',deadline:'2026-09-30',themes:['ocean','vents','sensors'],desc:'Deep sea pressure & sensors.'},
+];
+
+const COL = {space:0x3478c2,ocean:0x2d9462,gap:0xd05a3a,bridge:0x7c5cd1,lab:0x3478c2};
+const COL_HEX = {space:'#3478c2',ocean:'#2d9462',gap:'#d05a3a',bridge:'#7c5cd1',lab:'#3478c2'};
+const EDGE_COL = {gap:0xd05a3a,bridge:0x7c5cd1,contains:0xa89a82,cites:0xb8b6a7};
+
+let currentMode = 'graph3d';
+let currentFilter = 'all';
+let highlightedIds = new Set();
+let selectedData = null;
+let appInitialised = false;
+let pinnedLabelId = null;
+
+// ════ ONBOARDING LOGIC ════
+let obStep = 1;
+function obAdd(role, html, delay=0){
+  return new Promise(resolve => setTimeout(() => {
+    const wrap = document.getElementById('ob-messages');
+    const div = document.createElement('div');
+    div.className = `ob-msg ${role}`;
+    if(role === 'agent') div.innerHTML = `<div class="avatar">ai</div><div class="body">${html}</div>`;
+    else div.innerHTML = html;
+    wrap.appendChild(div);
+    wrap.scrollTop = wrap.scrollHeight;
+    resolve(div);
+  }, delay));
+}
+function useSuggestion(t){ document.getElementById('ob-input').value = t; obSend(); }
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function updateProgress(pct, label){
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
+
+function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+
+function makePaperLabel(title){
+  const clean = (title || 'Untitled paper').replace(/\s+/g, ' ').trim();
+  const clipped = clean.length > 60 ? clean.slice(0, 60).trim() + ' ...' : clean;
+  let splitAt = clipped.lastIndexOf(' ', Math.ceil(clipped.length / 2));
+  if(splitAt < 16) splitAt = clipped.indexOf(' ', Math.ceil(clipped.length / 2));
+  if(splitAt === -1) splitAt = Math.ceil(clipped.length / 2);
+  return clipped.slice(0, splitAt) + '\n' + clipped.slice(splitAt + 1);
+}
+
+function mapBackendPaper(paper){
+  const citations = Number(paper.citation_count) || 0;
+  const abstract = paper.abstract || 'No abstract available';
+  return {
+    id: paper.id,
+    label: makePaperLabel(paper.title),
+    type: paper.source === 'arxiv' ? 'space' : paper.source === 'openalex' ? 'ocean' : 'user',
+    domain: paper.domain || 'both',
+    desc: abstract.length > 200 ? abstract.slice(0, 200).trim() + ' ...' : abstract,
+    year: paper.year,
+    depth: 0.3 + Math.random() * 0.4,
+    citations,
+    style: citations > 100 ? 'tower' : 'office',
+    themes: Array.isArray(paper.themes) ? paper.themes : [],
+    authors: Array.isArray(paper.authors) ? paper.authors : [],
+  };
+}
+
+function mapGapNode(gapNode, sourcePaper){
+  const desc = gapNode.description || 'Research gap';
+  const domain = sourcePaper ? sourcePaper.domain : (gapNode.domain || 'both');
+  return {
+    id: gapNode.id,
+    label: makePaperLabel(desc.length > 50 ? desc.slice(0, 50).trim() + ' ...' : desc),
+    type: 'gap',
+    domain,
+    desc,
+    year: gapNode.year || (sourcePaper ? sourcePaper.year : 2026),
+    depth: 0.4 + Math.random() * 0.2,
+    citations: 0,
+    style: 'plot',
+    themes: [gapNode.gap_type].filter(Boolean),
+    authors: [],
+    parent_paper: gapNode.source_paper_id,
+  };
+}
+
+function updateResearchSpec(prompt, papers){
+  document.getElementById('spec-domain').textContent = 'multi-domain';
+  document.getElementById('spec-domain').classList.remove('empty');
+  document.getElementById('spec-domain').classList.add('fresh');
+  document.getElementById('spec-focus').textContent = prompt.slice(0, 60);
+  document.getElementById('spec-focus').classList.remove('empty');
+
+  const years = papers.map(p => p.year).filter(Boolean);
+  document.getElementById('spec-year').textContent = years.length ? `${Math.min(...years)}-${Math.max(...years)}` : 'unknown';
+  document.getElementById('spec-year').classList.remove('empty');
+  document.getElementById('spec-year').classList.add('fresh');
+
+  const themes = [...new Set(papers.flatMap(p => p.themes || []).filter(Boolean))].slice(0, 6);
+  const themesEl = document.getElementById('spec-themes');
+  themesEl.innerHTML = '';
+  themes.forEach(t => {
+    const pill = document.createElement('span');
+    pill.className = 'ob-pill active';
+    pill.textContent = t;
+    themesEl.appendChild(pill);
+  });
+}
+
+function loadFetchedPapers(papers, gapNodes=[]){
+  const papersById = new Map(papers.map(p => [p.id, p]));
+  const mappedGapNodes = gapNodes.map(g => mapGapNode(g, papersById.get(g.source_paper_id)));
+  PAPERS_DATA.splice(0, PAPERS_DATA.length, ...papers, ...mappedGapNodes);
+  LABS_DATA.forEach(lab => { lab.papers = []; });
+  papers.forEach((paper, i) => LABS_DATA[i % LABS_DATA.length].papers.push(paper.id));
+
+  EDGES.splice(0, EDGES.length);
+  LABS_DATA.forEach(lab => lab.papers.forEach(pid => EDGES.push([lab.id, pid, 'contains'])));
+  for(let i = 1; i < Math.min(papers.length, 16); i++) EDGES.push([papers[i - 1].id, papers[i].id, 'cites']);
+  mappedGapNodes.forEach((gap, i) => {
+    const lab = LABS_DATA.find(l => l.papers.includes(gap.parent_paper));
+    if(lab) {
+      lab.papers.push(gap.id);
+      EDGES.push([lab.id, gap.id, 'contains']);
+    }
+    EDGES.push([gap.parent_paper, gap.id, 'gap']);
+  });
+}
+
+async function runResearchFetch(prompt){
+  document.getElementById('ob-launch').disabled = true;
+  obStep = 3;
+  document.getElementById('dot-2').classList.replace('active','done');
+  document.getElementById('dot-3').classList.add('active');
+  document.getElementById('step-label').textContent = 'fetch papers';
+
+  const fetchPromise = fetch('http://localhost:8000/research', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({prompt}),
+  }).then(async response => {
+    if(!response.ok) throw new Error(`backend returned ${response.status}`);
+    return response.json();
+  }).catch(err => ({__error: err}));
+
+  updateProgress(50, 'opening connection to arxiv...');
+  await obAdd('system', 'opening connection to arxiv...');
+  await sleep(800);
+  updateProgress(62, 'opening connection to openalex...');
+  await obAdd('system', 'opening connection to openalex...');
+  await sleep(800);
+  updateProgress(76, 'fetching papers...');
+  await obAdd('system', 'fetching papers...');
+
+  try {
+    const data = await fetchPromise;
+    if(data && data.__error) throw data.__error;
+    const backendPapers = Array.isArray(data.papers) ? data.papers : [];
+    if(!backendPapers.length) throw new Error('backend returned no papers');
+
+    const papers = backendPapers.map(mapBackendPaper);
+    const gapNodes = Array.isArray(data.gap_nodes) ? data.gap_nodes : [];
+    loadFetchedPapers(papers, gapNodes);
+    updateResearchSpec(prompt, papers);
+
+    const sources = Array.isArray(data.sources_used) && data.sources_used.length ? data.sources_used.join(', ') : 'backend sources';
+    updateProgress(86, `received ${papers.length} papers`);
+    await obAdd('system', `received ${papers.length} papers from ${escapeHtml(sources)}`, 300);
+    updateProgress(94, `pydantic validation: ${papers.length}/${papers.length} passed`);
+    await obAdd('system', `pydantic validation: ${papers.length}/${papers.length} passed`, 500);
+    updateProgress(100, 'building collision graph');
+    await obAdd('system', 'building collision graph', 500);
+    await obAdd('agent', `<strong>Done.</strong> ${papers.length} papers loaded from ${escapeHtml(sources)}. Click below to enter.`, 500);
+    document.getElementById('ob-launch').disabled = false;
+    document.getElementById('progress-label').textContent = 'ready · graph loaded';
+  } catch(err) {
+    updateProgress(76, 'fetch failed · backend unavailable');
+    await obAdd('system', 'Could not fetch papers from the backend. Check that uvicorn is running, then try again.', 300);
+    document.getElementById('ob-launch').disabled = true;
+  }
+}
+
+async function obSend(){
+  const input = document.getElementById('ob-input');
+  const text = input.value.trim();
+  if(!text) return;
+  await obAdd('user', escapeHtml(text));
+  input.value = '';
+  document.getElementById('ob-send').disabled = true;
+
+  if(obStep === 1){
+    const lower = text.toLowerCase();
+    const isSpace = /\b(space|orbital|debris|satellite|junk|spacecraft)\b/.test(lower);
+    const isOcean = /\b(ocean|marine|sea|deep[- ]sea|underwater|hydrothermal|biofouling)\b/.test(lower);
+    const domain = isSpace && isOcean ? 'both' : isSpace ? 'space' : isOcean ? 'ocean' : 'space';
+    document.getElementById('spec-domain').textContent = domain;
+    document.getElementById('spec-domain').classList.remove('empty');
+    document.getElementById('spec-domain').classList.add('fresh');
+    document.getElementById('spec-focus').textContent = text.slice(0, 60);
+    document.getElementById('spec-focus').classList.remove('empty');
+
+    await obAdd('agent', `Reading this as a <strong>${domain === 'both' ? 'cross-domain' : 'deep ' + domain}</strong> query. Extracting themes and building queries.`, 600);
+
+    const themePool = (domain === 'space' || domain === 'both') ?
+      ['debris','orbital','collision-avoidance','tracking','remediation'] :
+      ['deep-sea','biodiversity','sensors','pressure','sustainability'];
+    
+    await new Promise(r => setTimeout(r, 600));
+    document.getElementById('spec-year').textContent = '2022–2026';
+    document.getElementById('spec-year').classList.remove('empty');
+    document.getElementById('spec-year').classList.add('fresh');
+
+    const themesEl = document.getElementById('spec-themes');
+    themesEl.innerHTML = '';
+    themePool.forEach((t, i) => setTimeout(() => {
+      const pill = document.createElement('span');
+      pill.className = 'ob-pill active';
+      pill.textContent = t;
+      themesEl.appendChild(pill);
+    }, i * 100));
+
+    await new Promise(r => setTimeout(r, 800));
+    const arxivQ = domain === 'space' ? '"space debris" OR "orbital debris" OR "collision avoidance"' : domain === 'ocean' ? '"deep sea" OR "marine biodiversity"' : '"extreme environment"';
+    const openalexQ = domain === 'space' ? 'space debris remediation' : domain === 'ocean' ? 'deep ocean sustainability' : 'extreme environment research';
+    document.getElementById('spec-arxiv-q').innerHTML = `<code style="font-family:var(--mono);font-size:11px;color:var(--blue)">${escapeHtml(arxivQ)}</code>`;
+    document.getElementById('spec-arxiv-q').classList.remove('empty');
+    document.getElementById('spec-openalex-q').innerHTML = `<code style="font-family:var(--mono);font-size:11px;color:var(--green)">${escapeHtml(openalexQ)}</code>`;
+    document.getElementById('spec-openalex-q').classList.remove('empty');
+
+    updateProgress(40, 'queries built · fetching');
+
+    await obAdd('agent', `Here's what I'll run:
+      <div class="ob-tool-card">
+        <div class="ob-tool-card-head"><span class="ob-tool-icon">a</span>arxiv.search</div>
+        <div class="ob-tool-card-body"><span class="key">query:</span> <span class="val">${escapeHtml(arxivQ)}</span><br><span class="key">max_results:</span> <span class="val">25</span></div>
+      </div>
+      <div class="ob-tool-card">
+        <div class="ob-tool-card-head"><span class="ob-tool-icon" style="background:var(--blue-soft);color:var(--blue)">o</span>openalex.works</div>
+        <div class="ob-tool-card-body"><span class="key">search:</span> <span class="val-q">${escapeHtml(openalexQ)}</span><br><span class="key">filter:</span> <span class="val-q">publication_year:>2021</span></div>
+      </div>
+      <div style="margin-top:10px">Each result validated through your <code>Paper</code> Pydantic model. Fetching now.</div>`, 1000);
+    obStep = 2;
+    document.getElementById('dot-1').classList.replace('active','done');
+    document.getElementById('dot-2').classList.add('active');
+    document.getElementById('step-label').textContent = 'build queries';
+    await runResearchFetch(text);
+
+  } else if(obStep === 2){
+    await runResearchFetch(text);
+  }
+  document.getElementById('ob-send').disabled = false;
+}
+
+function launchApp(){
+  document.getElementById('onboarding').classList.add('fade');
+  setTimeout(() => {
+    document.body.classList.add('ready', 'mode-graph3d');
+    initApp();
+  }, 400);
+}
+
+document.getElementById('ob-input').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); obSend(); }
+});
+
+// ════ MAIN APP INIT ════
+function initApp(){
+  if(appInitialised) return;
+  appInitialised = true;
+  initGraph3D();
+  initGraph2D();
+  initCity();
+  buildExplorer();
+  updateStats();
+  buildGrants(new Map());
+}
+
+// ════ GRAPH 3D ════
+let g3_renderer, g3_scene, g3_camera;
+let g3_nodes = [], g3_edges = [];
+let g3_target = new THREE.Vector3(0,0,0);
+let g3_spherical = {theta:0.3, phi:1.1, radius:280};
+let g3_dragging = false, g3_rightDrag = false, g3_prev = {x:0,y:0};
+let g3_hover = null;
+const g3_raycaster = new THREE.Raycaster();
+const g3_mouse = new THREE.Vector2();
+
+function initGraph3D(){
+  const stage = document.getElementById('stage');
+  const cont = document.getElementById('canvas-3d');
+  g3_renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  g3_renderer.setPixelRatio(window.devicePixelRatio);
+  g3_renderer.setSize(stage.clientWidth, stage.clientHeight);
+  g3_renderer.setClearColor(0xfbfaf7, 1);
+  cont.appendChild(g3_renderer.domElement);
+
+  g3_scene = new THREE.Scene();
+  g3_scene.fog = new THREE.FogExp2(0xfbfaf7, 0.0028);
+  g3_camera = new THREE.PerspectiveCamera(55, stage.clientWidth/stage.clientHeight, 0.1, 2000);
+  g3_updateCam();
+
+  g3_scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.4);
+  dl.position.set(120, 150, 100);
+  g3_scene.add(dl);
+
+  const grid = new THREE.GridHelper(500, 40, 0xd6d4ca, 0xe8e6dd);
+  grid.position.y = -100;
+  g3_scene.add(grid);
+
+  // Build nodes
+  LABS_DATA.forEach(d => g3_nodes.push(g3_buildLab(d)));
+  PAPERS_DATA.forEach(d => g3_nodes.push(g3_buildPaper(d)));
+  EDGES.forEach(([s,t,type]) => g3_buildEdge(s,t,type));
+
+  g3_attachControls();
+  g3_animate();
+}
+
+function g3_pos(n){
+  const yr = (n.year - 2010) / 14;
+  let x, y; const z = (yr - 0.5) * 200;
+  if(n.domain === 'space'){ x = 60 + (n.depth || 0.5) * 80; y = (n.depth || 0.5) * 80; }
+  else if(n.domain === 'ocean'){ x = -60 - (1 - (n.depth || 0.5)) * 80; y = -(1 - (n.depth || 0.5)) * 80; }
+  else { x = (Math.random() - 0.5) * 40; y = (Math.random() - 0.5) * 30; }
+  x += (Math.random() - 0.5) * 20; y += (Math.random() - 0.5) * 20;
+  return new THREE.Vector3(x, y, z);
+}
+
+function g3_paperPos(data){
+  const lab = LABS_DATA.find(l => (l.papers || []).includes(data.id));
+  const labNode = lab ? g3_nodes.find(n => n.data.id === lab.id) : null;
+  if(!lab || !labNode) return g3_pos(data);
+  const i = lab.papers.indexOf(data.id);
+  const count = Math.max(lab.papers.length, 1);
+  const ring = Math.floor(i / 10);
+  const angle = (i % 10) / Math.min(count, 10) * Math.PI * 2 + ring * 0.45;
+  const spread = 62 + ring * 34;
+  const height = ((i % 5) - 2) * 12;
+  const pos = labNode.mesh.position.clone();
+  pos.x += Math.cos(angle) * spread;
+  pos.y += height;
+  pos.z += Math.sin(angle) * spread;
+  return pos;
+}
+
+function g3_label(text, color, scale=1){
+  const lines = text.split('\n');
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 64;
+  const cx = cv.getContext('2d');
+  cx.font = `500 ${scale>1?14:12}px 'IBM Plex Mono',monospace`;
+  cx.fillStyle = color; cx.textAlign = 'center';
+  lines.forEach((l,i) => cx.fillText(l, 128, 20+i*16));
+  const tex = new THREE.CanvasTexture(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
+  sp.scale.set(38*scale, 9.5*scale, 1);
+  return sp;
+}
+
+function g3_buildLab(data){
+  const geo = new THREE.BoxGeometry(20,20,20);
+  const mat = new THREE.MeshPhongMaterial({color:0x3478c2,transparent:true,opacity:0.08,emissive:0x3478c2,emissiveIntensity:0.05});
+  const mesh = new THREE.Mesh(geo, mat);
+  const wire = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({color:0x3478c2,transparent:true,opacity:0.6}));
+  const grp = new THREE.Group();
+  grp.add(mesh); grp.add(wire);
+  grp.position.copy(g3_pos(data));
+  const lbl = g3_label(data.label, '#3478c2', 1.05);
+  lbl.position.set(0, 16, 0);
+  grp.add(lbl);
+  g3_scene.add(grp);
+  return {mesh:grp, data, isLab:true};
+}
+
+function g3_buildPaper(data){
+  const r = data.type === 'gap' ? 5 : data.type === 'bridge' ? 4.5 : 3.5;
+  const geo = new THREE.SphereGeometry(r, 16, 16);
+  const col = COL[data.type] || COL.space;
+  const mat = new THREE.MeshPhongMaterial({color:col,transparent:true,opacity:0.92,shininess:30});
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(g3_paperPos(data));
+  const lc = data.type === 'gap' ? '#d05a3a' : data.type === 'bridge' ? '#7c5cd1' : data.domain === 'ocean' ? '#2d9462' : '#3478c2';
+  const lbl = g3_label(data.label, lc, 0.72);
+  lbl.position.set(0, r+6, 0);
+  lbl.visible = false;
+  mesh.userData.label = lbl;
+  mesh.add(lbl);
+  if(data.type === 'gap'){
+    const ring = new THREE.Mesh(new THREE.RingGeometry(r+1, r+2.5, 32), new THREE.MeshBasicMaterial({color:0xd05a3a,transparent:true,opacity:0.4,side:THREE.DoubleSide}));
+    ring.rotation.x = Math.PI/2;
+    mesh.add(ring);
+  }
+  g3_scene.add(mesh);
+  return {mesh, data};
+}
+
+function g3_buildEdge(s, t, type){
+  const sObj = g3_nodes.find(n => n.data.id === s);
+  const tObj = g3_nodes.find(n => n.data.id === t);
+  if(!sObj || !tObj) return;
+  const geo = new THREE.BufferGeometry().setFromPoints([sObj.mesh.position.clone(), tObj.mesh.position.clone()]);
+  const col = EDGE_COL[type] || 0xb8b6a7;
+  const opacity = type === 'contains' ? 0.18 : type === 'gap' ? 0.35 : type === 'bridge' ? 0.4 : 0.25;
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color:col,transparent:true,opacity}));
+  g3_scene.add(line);
+  g3_edges.push({line,type});
+}
+
+function g3_updateCam(){
+  if(!g3_camera) return;
+  g3_camera.position.x = g3_target.x + g3_spherical.radius * Math.sin(g3_spherical.phi) * Math.sin(g3_spherical.theta);
+  g3_camera.position.y = g3_target.y + g3_spherical.radius * Math.cos(g3_spherical.phi);
+  g3_camera.position.z = g3_target.z + g3_spherical.radius * Math.sin(g3_spherical.phi) * Math.cos(g3_spherical.theta);
+  g3_camera.lookAt(g3_target);
+}
+
+function g3_attachControls(){
+  const el = g3_renderer.domElement;
+  el.addEventListener('mousedown', e => { g3_dragging = true; g3_rightDrag = e.button === 2; g3_prev = {x:e.clientX,y:e.clientY}; });
+  el.addEventListener('contextmenu', e => e.preventDefault());
+  window.addEventListener('mouseup', () => g3_dragging = false);
+  window.addEventListener('mousemove', e => {
+    if(!g3_dragging || currentMode !== 'graph3d') return;
+    const dx = (e.clientX - g3_prev.x) * 0.006;
+    const dy = (e.clientY - g3_prev.y) * 0.006;
+    if(g3_rightDrag){
+      const right = new THREE.Vector3(); g3_camera.getWorldDirection(right);
+      right.cross(new THREE.Vector3(0,1,0)).normalize();
+      g3_target.addScaledVector(right, -dx*40); g3_target.y += dy*40;
+    } else {
+      g3_spherical.theta -= dx;
+      g3_spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, g3_spherical.phi + dy));
+    }
+    g3_prev = {x:e.clientX,y:e.clientY};
+    g3_updateCam();
+  });
+  el.addEventListener('wheel', e => {
+    if(currentMode !== 'graph3d') return;
+    g3_spherical.radius = Math.max(60, Math.min(600, g3_spherical.radius + e.deltaY * 0.3));
+    g3_updateCam();
+  }, {passive:true});
+  el.addEventListener('mousemove', e => {
+    if(g3_dragging || currentMode !== 'graph3d') return;
+    const rect = el.getBoundingClientRect();
+    g3_mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    g3_mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    g3_raycaster.setFromCamera(g3_mouse, g3_camera);
+    const meshes = g3_nodes.map(n => n.isLab ? n.mesh.children[0] : n.mesh);
+    const hits = g3_raycaster.intersectObjects(meshes, true);
+    if(hits.length > 0){
+      let obj = hits[0].object;
+      const no = g3_nodes.find(n => n.isLab ? (n.mesh === obj || n.mesh.children.includes(obj)) : n.mesh === obj);
+      if(no){ g3_hover = no; el.style.cursor = 'pointer'; showTooltip(e.clientX, e.clientY, no.data); return; }
+    }
+    g3_hover = null; el.style.cursor = 'default'; hideTooltip();
+  });
+  el.addEventListener('click', e => {
+    if(currentMode !== 'graph3d') return;
+    if(g3_hover){
+      pinnedLabelId = g3_hover.data.id;
+      selectNode(g3_hover.data);
+    } else {
+      pinnedLabelId = null;
+    }
+  });
+}
+
+function g3_animate(){
+  requestAnimationFrame(g3_animate);
+  if(currentMode !== 'graph3d') return;
+  const t = performance.now() * 0.001;
+  g3_nodes.forEach(no => {
+    if(!no.isLab && no.mesh.userData.label){
+      const closeEnough = no.mesh.position.distanceTo(g3_camera.position) < 80;
+      no.mesh.userData.label.visible = g3_hover === no || pinnedLabelId === no.data.id || closeEnough;
+    }
+    if(no.data.type === 'gap' && !no.isLab){
+      no.mesh.scale.setScalar(1 + 0.06 * Math.sin(t*2 + (no.data.id || 0) * 0.5));
+    }
+    if(no.data.type === 'bridge' && !no.isLab) no.mesh.rotation.y = t * 0.4;
+    if(no.isLab) no.mesh.rotation.y = t * 0.12;
+  });
+  g3_renderer.render(g3_scene, g3_camera);
+}
+
+// ════ GRAPH 2D ════
+const g2_canvas = document.getElementById('canvas-2d');
+const g2_ctx = g2_canvas.getContext('2d');
+let g2_W, g2_H, g2_nodes = [], g2_drag = null, g2_offX = 0, g2_offY = 0, g2_hover = null;
+let g2_zoom = 1;
+
+function g2_toWorld(px, py){
+  return {
+    x: (px - g2_W/2) / g2_zoom + g2_W/2,
+    y: (py - g2_H/2) / g2_zoom + g2_H/2,
+  };
+}
+
+function initGraph2D(){
+  const stage = document.getElementById('stage');
+  const dpr = window.devicePixelRatio || 1;
+  g2_W = stage.clientWidth; g2_H = stage.clientHeight;
+  g2_canvas.width = g2_W * dpr; g2_canvas.height = g2_H * dpr;
+  g2_canvas.style.width = g2_W + 'px'; g2_canvas.style.height = g2_H + 'px';
+  g2_ctx.scale(dpr, dpr);
+  g2_rebuild();
+  g2_loop();
+}
+
+function g2_rebuild(){
+  g2_nodes = [];
+  const cx = g2_W/2, cy = g2_H/2;
+  LABS_DATA.forEach((l, i) => {
+    const a = (i / LABS_DATA.length) * Math.PI * 2 - Math.PI/2;
+    g2_nodes.push({data:l, x:cx + Math.cos(a)*360, y:cy + Math.sin(a)*300, vx:0, vy:0});
+  });
+  LABS_DATA.forEach(lab => {
+    const ln = g2_nodes.find(n => n.data.id === lab.id);
+    lab.papers.forEach((pid, i) => {
+      const p = PAPERS_DATA.find(pp => pp.id === pid);
+      if(!p) return;
+      const ring = Math.floor(i / 12);
+      const a = (i % 12) / Math.min(lab.papers.length, 12) * Math.PI * 2 + ring * 0.35;
+      const spread = 130 + ring * 54;
+      g2_nodes.push({data:p, x:ln.x + Math.cos(a)*spread, y:ln.y + Math.sin(a)*(spread*0.82), vx:0, vy:0});
+    });
+  });
+  const placed = new Set(g2_nodes.map(n => n.data.id));
+  PAPERS_DATA.filter(p => !placed.has(p.id)).forEach((p, i) => {
+    const a = (i / 4) * Math.PI * 2;
+    g2_nodes.push({data:p, x:cx + Math.cos(a)*500, y:cy + Math.sin(a)*395, vx:0, vy:0});
+  });
+}
+
+function g2_simulate(){
+  g2_nodes.forEach(a => {
+    g2_nodes.forEach(b => {
+      if(a === b) return;
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const d = Math.sqrt(dx*dx + dy*dy) || 1;
+      const min = (a.data.type === 'lab' || b.data.type === 'lab') ? 216 : 108;
+      if(d < min){ const f = -1080/(d*d); a.vx += f*dx/d; a.vy += f*dy/d; b.vx -= f*dx/d; b.vy -= f*dy/d; }
+    });
+    a.vx += (g2_W/2 - a.x) * 0.004;
+    a.vy += (g2_H/2 - a.y) * 0.004;
+  });
+  EDGES.forEach(([s,t,type]) => {
+    const a = g2_nodes.find(n => n.data.id === s);
+    const b = g2_nodes.find(n => n.data.id === t);
+    if(!a || !b) return;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const d = Math.sqrt(dx*dx + dy*dy) || 1;
+    const tg = type === 'contains' ? 135 : 252;
+    const f = (d - tg) * 0.018;
+    if(a !== g2_drag){ a.vx += f*dx/d; a.vy += f*dy/d; }
+    if(b !== g2_drag){ b.vx -= f*dx/d; b.vy -= f*dy/d; }
+  });
+  g2_nodes.forEach(n => {
+    if(n === g2_drag) return;
+    n.vx *= 0.82; n.vy *= 0.82;
+    n.x += n.vx; n.y += n.vy;
+    n.x = Math.max(60, Math.min(g2_W-60, n.x));
+    n.y = Math.max(60, Math.min(g2_H-60, n.y));
+  });
+}
+
+function g2_drawLabel(lines, x, y, color, font='400 10px "IBM Plex Mono",monospace'){
+  g2_ctx.save();
+  g2_ctx.font = font;
+  g2_ctx.textAlign = 'center';
+  const width = Math.max(...lines.map(l => g2_ctx.measureText(l).width)) + 14;
+  const height = lines.length * 11 + 8;
+  g2_ctx.shadowColor = 'rgba(15,15,15,0.08)';
+  g2_ctx.shadowBlur = 6;
+  g2_ctx.fillStyle = 'rgba(255,255,255,0.86)';
+  g2_ctx.strokeStyle = 'rgba(15,15,15,0.08)';
+  g2_ctx.lineWidth = 1;
+  g2_ctx.beginPath();
+  g2_ctx.roundRect(x - width/2, y - 8, width, height, 6);
+  g2_ctx.fill();
+  g2_ctx.shadowBlur = 0;
+  g2_ctx.stroke();
+  g2_ctx.fillStyle = color;
+  lines.forEach((l,i) => g2_ctx.fillText(l, x, y+2+i*11));
+  g2_ctx.restore();
+}
+
+function g2_draw(){
+  g2_ctx.fillStyle = '#fbfaf7';
+  g2_ctx.fillRect(0, 0, g2_W, g2_H);
+  g2_ctx.save();
+  g2_ctx.translate(g2_W/2, g2_H/2);
+  g2_ctx.scale(g2_zoom, g2_zoom);
+  g2_ctx.translate(-g2_W/2, -g2_H/2);
+  EDGES.forEach(([s,t,type]) => {
+    const a = g2_nodes.find(n => n.data.id === s);
+    const b = g2_nodes.find(n => n.data.id === t);
+    if(!a || !b) return;
+    if(!isVisibleForFilter(a.data) || !isVisibleForFilter(b.data)) return;
+    g2_ctx.beginPath(); g2_ctx.moveTo(a.x, a.y); g2_ctx.lineTo(b.x, b.y);
+    g2_ctx.strokeStyle = type === 'gap' ? 'rgba(208,90,58,0.5)' : type === 'bridge' ? 'rgba(124,92,209,0.5)' : type === 'contains' ? 'rgba(52,120,194,0.2)' : 'rgba(184,182,167,0.5)';
+    g2_ctx.lineWidth = 1.2;
+    g2_ctx.setLineDash(type === 'contains' ? [3,4] : []);
+    g2_ctx.stroke();
+    g2_ctx.setLineDash([]);
+  });
+  g2_nodes.forEach(n => {
+    const d = n.data;
+    if(!isVisibleForFilter(d)) return;
+    if(d.type === 'lab'){
+      const isHov = g2_hover === n;
+      g2_ctx.fillStyle = isHov ? 'rgba(52,120,194,0.12)' : 'rgba(52,120,194,0.06)';
+      g2_ctx.strokeStyle = isHov ? '#3478c2' : 'rgba(52,120,194,0.5)';
+      g2_ctx.lineWidth = 1;
+      g2_ctx.fillRect(n.x-24, n.y-24, 48, 48);
+      g2_ctx.strokeRect(n.x-24, n.y-24, 48, 48);
+      const lines = d.label.split('\n');
+      g2_drawLabel(lines, n.x, n.y+34, '#3478c2', '500 9px "IBM Plex Mono",monospace');
+      return;
+    }
+    const t = d.type === 'gap' ? {c:'#d05a3a',r:8} : d.type === 'bridge' ? {c:'#7c5cd1',r:7} : {c:COL_HEX[d.type] || COL_HEX.space, r:5};
+    const isHov = g2_hover === n;
+    const isHL = highlightedIds.size > 0 && highlightedIds.has(d.id);
+    g2_ctx.globalAlpha = highlightedIds.size === 0 || isHL ? 1 : 0.25;
+    g2_ctx.fillStyle = t.c;
+    g2_ctx.beginPath();
+    g2_ctx.arc(n.x, n.y, isHov ? t.r+2 : t.r, 0, Math.PI*2);
+    g2_ctx.fill();
+    if(isHL){ g2_ctx.strokeStyle = t.c; g2_ctx.lineWidth = 2; g2_ctx.beginPath(); g2_ctx.arc(n.x, n.y, t.r+4, 0, Math.PI*2); g2_ctx.stroke(); }
+    g2_ctx.globalAlpha = 1;
+    const showLabel = isHov || pinnedLabelId === d.id || g2_zoom > 1.5;
+    if(showLabel) g2_drawLabel(d.label.split('\n'), n.x, n.y+t.r+11, isHov || pinnedLabelId === d.id ? '#1f1f1c' : '#5a594f');
+  });
+  g2_ctx.restore();
+}
+
+function g2_loop(){
+  if(currentMode === 'graph2d'){ g2_simulate(); g2_draw(); }
+  requestAnimationFrame(g2_loop);
+}
+
+g2_canvas.addEventListener('mousemove', e => {
+  if(currentMode !== 'graph2d') return;
+  const r = g2_canvas.getBoundingClientRect();
+  const pos = g2_toWorld(e.clientX - r.left, e.clientY - r.top);
+  const px = pos.x, py = pos.y;
+  if(g2_drag){ g2_drag.x = px + g2_offX; g2_drag.y = py + g2_offY; g2_drag.vx = 0; g2_drag.vy = 0; return; }
+  const n = g2_nodes.find(no => {
+    if(no.data.type === 'lab') return px >= no.x-24 && px <= no.x+24 && py >= no.y-24 && py <= no.y+24;
+    const dx = no.x-px, dy = no.y-py;
+    return Math.sqrt(dx*dx + dy*dy) < 12;
+  });
+  g2_hover = n || null;
+  g2_canvas.style.cursor = n ? 'pointer' : 'default';
+  if(n) showTooltip(e.clientX, e.clientY, n.data); else hideTooltip();
+});
+g2_canvas.addEventListener('mousedown', e => {
+  const r = g2_canvas.getBoundingClientRect();
+  const pos = g2_toWorld(e.clientX - r.left, e.clientY - r.top);
+  const px = pos.x, py = pos.y;
+  const n = g2_nodes.find(no => {
+    if(no.data.type === 'lab') return px >= no.x-24 && px <= no.x+24 && py >= no.y-24 && py <= no.y+24;
+    const dx = no.x-px, dy = no.y-py;
+    return Math.sqrt(dx*dx + dy*dy) < 12;
+  });
+  if(n){ g2_drag = n; g2_offX = n.x - px; g2_offY = n.y - py; }
+});
+g2_canvas.addEventListener('mouseup', e => {
+  const r = g2_canvas.getBoundingClientRect();
+  const pos = g2_toWorld(e.clientX - r.left, e.clientY - r.top);
+  const px = pos.x, py = pos.y;
+  if(!g2_drag || Math.abs(g2_drag.x - (px + g2_offX)) < 3){
+    const n = g2_nodes.find(no => {
+      if(no.data.type === 'lab') return px >= no.x-24 && px <= no.x+24 && py >= no.y-24 && py <= no.y+24;
+      const dx = no.x-px, dy = no.y-py;
+      return Math.sqrt(dx*dx + dy*dy) < 12;
+    });
+    if(n){
+      pinnedLabelId = n.data.id;
+      selectNode(n.data);
+    } else {
+      pinnedLabelId = null;
+    }
+  }
+  g2_drag = null;
+});
+g2_canvas.addEventListener('wheel', e => {
+  if(currentMode !== 'graph2d') return;
+  e.preventDefault();
+  g2_zoom = Math.max(0.85, Math.min(2.2, g2_zoom + (e.deltaY < 0 ? 0.12 : -0.12)));
+}, {passive:false});
+g2_canvas.addEventListener('mouseleave', () => { g2_hover = null; hideTooltip(); g2_drag = null; });
+
+// ════ CITY ════
+let c_renderer, c_scene, c_camera;
+let c_districts = {}, c_buildings = [];
+let c_target = new THREE.Vector3(0,0,0);
+let c_spherical = {theta:Math.PI/4, phi:Math.PI/3.5, radius:220};
+let c_dragging = false, c_rightDrag = false, c_prev = {x:0,y:0};
+let c_hover = null;
+const c_raycaster = new THREE.Raycaster();
+const c_mouse = new THREE.Vector2();
+
+function initCity(){
+  const stage = document.getElementById('stage');
+  const cont = document.getElementById('canvas-city');
+  c_renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  c_renderer.setPixelRatio(window.devicePixelRatio);
+  c_renderer.setSize(stage.clientWidth, stage.clientHeight);
+  c_renderer.setClearColor(0xebe9e0, 1);
+  c_renderer.shadowMap.enabled = true;
+  c_renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  cont.appendChild(c_renderer.domElement);
+
+  c_scene = new THREE.Scene();
+  c_scene.fog = new THREE.Fog(0xebe9e0, 200, 500);
+  c_camera = new THREE.PerspectiveCamera(45, stage.clientWidth/stage.clientHeight, 0.1, 2000);
+  c_updateCam();
+
+  c_scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const sun = new THREE.DirectionalLight(0xfff4e0, 0.85);
+  sun.position.set(80, 120, 60);
+  sun.castShadow = true;
+  sun.shadow.mapSize.width = 1024;
+  sun.shadow.mapSize.height = 1024;
+  sun.shadow.camera.left = -150; sun.shadow.camera.right = 150;
+  sun.shadow.camera.top = 150; sun.shadow.camera.bottom = -150;
+  sun.shadow.bias = -0.0005;
+  c_scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xc8d4e8, 0.3);
+  fill.position.set(-60, 40, -40);
+  c_scene.add(fill);
+
+  c_buildGround();
+  LABS_DATA.forEach(lab => {
+    const d = c_buildDistrict(lab);
+    c_scene.add(d);
+    c_districts[lab.id] = d;
+    lab.papers.forEach(pid => {
+      const p = PAPERS_DATA.find(pp => pp.id === pid);
+      if(!p) return;
+      const b = c_buildBuilding(p, lab);
+      d.add(b);
+      c_buildings.push({mesh:b, data:p, parent:d});
+    });
+  });
+  PAPERS_DATA.filter(p => p.type === 'bridge').forEach((p, i) => {
+    const b = c_buildBuilding(p, {papers:[p.id]});
+    b.position.set(0, 0, i*25 - 10);
+    c_scene.add(b);
+    c_buildings.push({mesh:b, data:p, parent:null});
+  });
+  c_buildPaths();
+  c_attachControls();
+  c_animate();
+}
+
+function c_buildGround(){
+  const g = new THREE.Group();
+  const sg = new THREE.Mesh(new THREE.PlaneGeometry(180,400), new THREE.MeshLambertMaterial({color:0xeae5d8}));
+  sg.rotation.x = -Math.PI/2; sg.position.x = 90; sg.receiveShadow = true; g.add(sg);
+  const og = new THREE.Mesh(new THREE.PlaneGeometry(180,400), new THREE.MeshLambertMaterial({color:0xd8e0d4}));
+  og.rotation.x = -Math.PI/2; og.position.x = -90; og.receiveShadow = true; g.add(og);
+  const r = new THREE.Mesh(new THREE.PlaneGeometry(8,400), new THREE.MeshLambertMaterial({color:0xb8c8d0}));
+  r.rotation.x = -Math.PI/2; r.position.y = 0.05; g.add(r);
+  // grid lines
+  for(let i = -180; i <= 180; i += 12){
+    const ln = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i,0.1,-200), new THREE.Vector3(i,0.1,200)]), new THREE.LineBasicMaterial({color:0xc8c2b0,transparent:true,opacity:0.3}));
+    g.add(ln);
+  }
+  for(let i = -200; i <= 200; i += 12){
+    const ln = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-180,0.1,i), new THREE.Vector3(180,0.1,i)]), new THREE.LineBasicMaterial({color:0xc8c2b0,transparent:true,opacity:0.3}));
+    g.add(ln);
+  }
+  c_scene.add(g);
+}
+
+function c_buildDistrict(lab){
+  const grp = new THREE.Group();
+  const isSpace = lab.domain === 'space';
+  grp.position.set(isSpace ? 50 + lab.gridX * 14 : -50 + lab.gridX * 14, 0, lab.gridZ * 18);
+
+  const plot = new THREE.Mesh(new THREE.BoxGeometry(40,0.6,40), new THREE.MeshLambertMaterial({color:isSpace?0xdfd9c8:0xcfd6cc}));
+  plot.position.y = 0.3; plot.receiveShadow = true; grp.add(plot);
+
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(42,0.2,42), new THREE.MeshLambertMaterial({color:isSpace?0x3478c2:0x2d9462,transparent:true,opacity:0.7}));
+  edge.position.y = 0.1; grp.add(edge);
+
+  const hq = new THREE.Group();
+  const hqB = new THREE.Mesh(new THREE.BoxGeometry(8,7,8), new THREE.MeshLambertMaterial({color:isSpace?0x4a8acf:0x4ba577}));
+  hqB.position.y = 4.1; hqB.castShadow = true; hq.add(hqB);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(6,3,4), new THREE.MeshLambertMaterial({color:isSpace?0x2c5d8e:0x1f6a47}));
+  roof.position.y = 9.1; roof.rotation.y = Math.PI/4; roof.castShadow = true; hq.add(roof);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,4), new THREE.MeshLambertMaterial({color:0x333}));
+  pole.position.y = 12.5; hq.add(pole);
+  const flag = new THREE.Mesh(new THREE.PlaneGeometry(2,1.2), new THREE.MeshLambertMaterial({color:isSpace?0x3478c2:0x2d9462,side:THREE.DoubleSide}));
+  flag.position.set(1, 13.5, 0); hq.add(flag);
+  grp.add(hq);
+
+  // Trees in corners
+  [[-18,-18],[18,-18],[-18,18],[18,18]].forEach(([x,z]) => {
+    const tg = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.2,1), new THREE.MeshLambertMaterial({color:0x6b4f30}));
+    trunk.position.y = 0.5; tg.add(trunk);
+    const fol = new THREE.Mesh(new THREE.ConeGeometry(0.8,1.8,6), new THREE.MeshLambertMaterial({color:isSpace?0x6b8a4d:0x4d7a5a}));
+    fol.position.y = 1.8; fol.castShadow = true; tg.add(fol);
+    tg.position.set(x, 0.3, z); grp.add(tg);
+  });
+
+  grp.userData = {data:lab, isLab:true, hq, plot};
+  return grp;
+}
+
+function c_buildBuilding(paper, parentLab){
+  const grp = new THREE.Group();
+  if(paper.type === 'gap'){
+    const plot = new THREE.Mesh(new THREE.BoxGeometry(7,0.3,7), new THREE.MeshLambertMaterial({color:0xc4a89a}));
+    plot.position.y = 0.7; plot.receiveShadow = true; grp.add(plot);
+    [[-3.5,-3.5],[3.5,-3.5],[3.5,3.5],[-3.5,3.5]].forEach(([x,z]) => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,1.5), new THREE.MeshLambertMaterial({color:0xd05a3a}));
+      post.position.set(x,1.2,z); post.castShadow = true; grp.add(post);
+    });
+    const marker = new THREE.Group();
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.2,3,6), new THREE.MeshLambertMaterial({color:0xd05a3a,emissive:0xd05a3a,emissiveIntensity:0.4}));
+    cone.position.y = 3.5; cone.castShadow = true; marker.add(cone);
+    grp.add(marker); grp.userData.marker = marker;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(4,5,32), new THREE.MeshBasicMaterial({color:0xd05a3a,transparent:true,opacity:0.3,side:THREE.DoubleSide}));
+    ring.rotation.x = -Math.PI/2; ring.position.y = 0.85; grp.add(ring);
+    grp.userData.ring = ring;
+  } else if(paper.type === 'bridge'){
+    const base = new THREE.Mesh(new THREE.BoxGeometry(8,0.5,8), new THREE.MeshLambertMaterial({color:0xd9d0e8}));
+    base.position.y = 0.85; base.receiveShadow = true; grp.add(base);
+    [[-2.5,0],[2.5,0]].forEach(([x,z]) => {
+      const t = new THREE.Mesh(new THREE.BoxGeometry(1.5,8,1.5), new THREE.MeshLambertMaterial({color:0x7c5cd1}));
+      t.position.set(x,5.1,z); t.castShadow = true; grp.add(t);
+    });
+    const span = new THREE.Mesh(new THREE.BoxGeometry(6,0.4,1.2), new THREE.MeshLambertMaterial({color:0x9a7fdf}));
+    span.position.y = 8.5; span.castShadow = true; grp.add(span);
+  } else {
+    const cit = paper.citations || 20;
+    const h = Math.max(3, Math.min(14, cit / 12));
+    const isOcean = paper.domain === 'ocean';
+    const isTower = paper.style === 'tower' || cit > 80;
+    if(isTower){
+      const sects = Math.ceil(h / 3);
+      let cy = 0.6, cw = 4;
+      for(let i = 0; i < sects; i++){
+        const sh = i === sects - 1 ? h - cy + 0.6 : 3;
+        const w = cw - i * 0.4;
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w,sh,w), new THREE.MeshLambertMaterial({color:isOcean?0x4ba577:0x4a8acf}));
+        m.position.y = cy + sh/2; m.castShadow = true; grp.add(m);
+        cy += sh; cw = w;
+      }
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,2.5), new THREE.MeshLambertMaterial({color:0x333}));
+      ant.position.y = cy + 1.25; grp.add(ant);
+      const lt = new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), new THREE.MeshBasicMaterial({color:0xff4040}));
+      lt.position.y = cy + 2.6; grp.add(lt);
+    } else {
+      const w = 4.5;
+      const b = new THREE.Mesh(new THREE.BoxGeometry(w,h,w), new THREE.MeshLambertMaterial({color:isOcean?0x6db78f:0x6a9bd1}));
+      b.position.y = 0.6 + h/2; b.castShadow = true; grp.add(b);
+      const r = new THREE.Mesh(new THREE.BoxGeometry(w+0.5,0.3,w+0.5), new THREE.MeshLambertMaterial({color:isOcean?0x3a7a5a:0x2c5d8e}));
+      r.position.y = 0.6 + h + 0.15; r.castShadow = true; grp.add(r);
+    }
+  }
+  const idx = parentLab.papers.indexOf(paper.id);
+  const positions = [[-12,-12],[12,-12],[-12,12],[12,12],[0,-12],[0,12]];
+  const pos = positions[idx] || [0,0];
+  grp.position.set(pos[0], 0, pos[1]);
+  grp.userData = {data:paper, isLab:false};
+  return grp;
+}
+
+function c_buildPaths(){
+  EDGES.forEach(([s,t,type]) => {
+    if(type === 'contains') return;
+    const sp = c_getPos(s), tp = c_getPos(t);
+    if(!sp || !tp) return;
+    const dx = tp.x - sp.x, dz = tp.z - sp.z;
+    const len = Math.sqrt(dx*dx + dz*dz);
+    const ang = Math.atan2(dx, dz);
+    const grp = new THREE.Group();
+    grp.position.set((sp.x+tp.x)/2, 0.15, (sp.z+tp.z)/2);
+    grp.rotation.y = ang;
+    let col, w, op;
+    if(type === 'gap'){ col = 0xd05a3a; w = 1.2; op = 0.7; }
+    else if(type === 'bridge'){ col = 0x7c5cd1; w = 1.5; op = 0.85; }
+    else { col = 0x9a8f7a; w = 1.0; op = 0.6; }
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(w,len), new THREE.MeshLambertMaterial({color:col,transparent:true,opacity:op,side:THREE.DoubleSide}));
+    path.rotation.x = -Math.PI/2; grp.add(path);
+    if(type === 'gap'){
+      const segs = Math.floor(len / 3);
+      for(let i = 0; i < segs; i += 2){
+        const s = new THREE.Mesh(new THREE.PlaneGeometry(w*1.2,1.2), new THREE.MeshBasicMaterial({color:0xff7a5a,transparent:true,opacity:0.7,side:THREE.DoubleSide}));
+        s.rotation.x = -Math.PI/2; s.position.set(0,0.05,-len/2 + i*3 + 1.5);
+        grp.add(s);
+      }
+    }
+    c_scene.add(grp);
+  });
+}
+
+function c_getPos(id){
+  if(typeof id === 'string' && id.startsWith('lab')) return c_districts[id]?.position;
+  const b = c_buildings.find(b => b.data.id === id);
+  if(!b) return null;
+  const p = new THREE.Vector3();
+  b.mesh.getWorldPosition(p);
+  return p;
+}
+
+function c_updateCam(){
+  if(!c_camera) return;
+  c_camera.position.x = c_target.x + c_spherical.radius * Math.sin(c_spherical.phi) * Math.sin(c_spherical.theta);
+  c_camera.position.y = c_target.y + c_spherical.radius * Math.cos(c_spherical.phi);
+  c_camera.position.z = c_target.z + c_spherical.radius * Math.sin(c_spherical.phi) * Math.cos(c_spherical.theta);
+  c_camera.lookAt(c_target);
+}
+
+function c_attachControls(){
+  const el = c_renderer.domElement;
+  el.addEventListener('mousedown', e => { c_dragging = true; c_rightDrag = e.button === 2; c_prev = {x:e.clientX,y:e.clientY}; });
+  el.addEventListener('contextmenu', e => e.preventDefault());
+  window.addEventListener('mouseup', () => c_dragging = false);
+  window.addEventListener('mousemove', e => {
+    if(!c_dragging || currentMode !== 'city') return;
+    const dx = (e.clientX - c_prev.x) * 0.005;
+    const dy = (e.clientY - c_prev.y) * 0.005;
+    if(c_rightDrag){
+      const right = new THREE.Vector3(); c_camera.getWorldDirection(right);
+      right.cross(new THREE.Vector3(0,1,0)).normalize();
+      c_target.addScaledVector(right, -dx*30);
+      const fwd = new THREE.Vector3();
+      c_camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
+      c_target.addScaledVector(fwd, dy*30);
+    } else {
+      c_spherical.theta -= dx;
+      c_spherical.phi = Math.max(0.3, Math.min(Math.PI/2.2, c_spherical.phi + dy));
+    }
+    c_prev = {x:e.clientX,y:e.clientY};
+    c_updateCam();
+  });
+  el.addEventListener('wheel', e => {
+    if(currentMode !== 'city') return;
+    c_spherical.radius = Math.max(80, Math.min(400, c_spherical.radius + e.deltaY * 0.4));
+    c_updateCam();
+  }, {passive:true});
+  el.addEventListener('mousemove', e => {
+    if(c_dragging || currentMode !== 'city') return;
+    const rect = el.getBoundingClientRect();
+    c_mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    c_mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    c_raycaster.setFromCamera(c_mouse, c_camera);
+    const meshes = [];
+    Object.values(c_districts).forEach(d => meshes.push(d.userData.plot));
+    c_buildings.forEach(b => b.mesh.traverse(c => { if(c.isMesh) meshes.push(c); }));
+    const hits = c_raycaster.intersectObjects(meshes, false);
+    if(hits.length > 0){
+      let obj = hits[0].object;
+      while(obj && (!obj.userData || !obj.userData.data)) obj = obj.parent;
+      if(obj && obj.userData && obj.userData.data){
+        c_hover = obj;
+        el.style.cursor = 'pointer';
+        showTooltip(e.clientX, e.clientY, obj.userData.data);
+        return;
+      }
+    }
+    c_hover = null; el.style.cursor = 'grab'; hideTooltip();
+  });
+  el.addEventListener('click', e => {
+    if(!c_hover || currentMode !== 'city') return;
+    selectNode(c_hover.userData.data);
+  });
+}
+
+function c_animate(){
+  requestAnimationFrame(c_animate);
+  if(currentMode !== 'city') return;
+  const t = performance.now() * 0.001;
+  c_buildings.forEach(b => {
+    if(b.data.type === 'gap' && b.mesh.userData.marker){
+      b.mesh.userData.marker.scale.setScalar(1 + 0.15 * Math.sin(t*2));
+      b.mesh.userData.marker.rotation.y = t * 0.5;
+      if(b.mesh.userData.ring){
+        b.mesh.userData.ring.material.opacity = 0.2 + 0.2 * Math.sin(t*2);
+      }
+    }
+  });
+  Object.values(c_districts).forEach(d => {
+    if(d.userData.hq){
+      const flag = d.userData.hq.children.find(c => c.geometry && c.geometry.type === 'PlaneGeometry');
+      if(flag) flag.rotation.y = Math.sin(t*2 + d.position.x*0.1) * 0.15;
+    }
+  });
+  c_renderer.render(c_scene, c_camera);
+}
+
+// ════ SHARED: TOOLTIP, SELECT, MODES ════
+const tooltip = document.getElementById('tooltip');
+function showTooltip(cx, cy, data){
+  document.getElementById('tt-title').textContent = data.label.replace('\n',' ');
+  document.getElementById('tt-body').textContent = data.desc;
+  const tt = document.getElementById('tt-type');
+  let typeLabel = data.type;
+  if(data.type === 'lab') typeLabel = `lab · ${data.papers.length} papers`;
+  else if(data.type === 'gap') typeLabel = 'knowledge gap';
+  else if(data.type === 'bridge') typeLabel = 'cross-domain bridge';
+  else typeLabel = `${data.type} · ${data.year || ''}`;
+  tt.textContent = typeLabel;
+  const c = COL_HEX[data.type] || '#888';
+  tt.style.background = c + '20'; tt.style.color = c; tt.style.border = `1px solid ${c}40`;
+  const stats = document.getElementById('tt-stats');
+  if(data.citations !== undefined && currentMode === 'city'){
+    stats.innerHTML = `<span>${data.citations} citations</span>`;
+    stats.style.display = 'flex';
+  } else { stats.style.display = 'none'; }
+  tooltip.style.left = (cx + 16) + 'px';
+  tooltip.style.top = (cy - 8) + 'px';
+  tooltip.style.opacity = '1';
+}
+function hideTooltip(){ tooltip.style.opacity = '0'; }
+
+function selectNode(data){
+  selectedData = data;
+  document.getElementById('d-title').textContent = data.label.replace('\n',' ');
+  document.getElementById('d-body').textContent = data.desc + (data.themes ? `\n\nThemes: ${data.themes.join(', ')}` : '');
+  const btn = document.getElementById('d-act');
+  btn.textContent = data.type === 'gap' ? 'find solutions →' : data.type === 'lab' ? 'ask about lab →' : 'explore connections →';
+  btn.onclick = () => qp(`Tell me about "${data.label.replace('\n',' ')}" — what gaps, connections, opportunities?`);
+  document.getElementById('sel-detail').classList.add('vis');
+  switchTab('info', document.querySelectorAll('.stab')[1]);
+  matchGrants(data);
+}
+
+function setMode(m){
+  currentMode = m;
+  document.body.classList.remove('mode-graph3d','mode-graph2d','mode-city');
+  document.body.classList.add('mode-' + m);
+  ['graph3d','graph2d','city'].forEach(x => document.getElementById('vb-' + x).classList.toggle('active', x === m));
+  document.getElementById('hint').textContent = m === 'city' ? 'drag — rotate · scroll — zoom · right-drag — pan · click — inspect' : m === 'graph2d' ? 'drag node · click — inspect' : 'drag — orbit · scroll — zoom · click — inspect';
+  if(m === 'graph2d') initGraph2D();
+}
+
+function gapSourceIds(){
+  return new Set(PAPERS_DATA.filter(p => p.type === 'gap' && p.parent_paper).map(p => p.parent_paper));
+}
+
+function isVisibleForFilter(data, filter=currentFilter){
+  if(filter === 'space') return data.domain === 'space';
+  if(filter === 'ocean') return data.domain === 'ocean';
+  if(filter === 'gaps'){
+    const sources = gapSourceIds();
+    return data.type === 'gap' || sources.has(data.id);
+  }
+  return true;
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Apply to graph 3D
+  g3_nodes.forEach(no => {
+    const d = no.data;
+    const vis = isVisibleForFilter(d, f);
+    no.mesh.traverse(c => { if(c.material) c.material.opacity = vis ? (c.material.opacity > 0.5 ? c.material.opacity : 0.85) : 0.05; });
+  });
+  // Apply to city
+  Object.values(c_districts).forEach(d => {
+    const data = d.userData.data;
+    let vis = isVisibleForFilter(data, f);
+    if(f === 'gaps') vis = (data.papers || []).some(pid => {
+      const paper = PAPERS_DATA.find(p => p.id === pid);
+      return paper && isVisibleForFilter(paper, f);
+    });
+    d.visible = vis;
+  });
+  c_buildings.forEach(b => {
+    let vis = isVisibleForFilter(b.data, f);
+    if(b.parent && !b.parent.visible) vis = false;
+    b.mesh.visible = vis;
+  });
+}
+
+function switchTab(id, btn){
+  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ════ EXPLORER + STATS ════
+function buildExplorer(){
+  ['labs-list','gaps-list','bridges-list'].forEach(id => document.getElementById(id).innerHTML = '');
+  LABS_DATA.forEach(l => {
+    const d = document.createElement('div');
+    d.className = 'ncard';
+    d.innerHTML = `<div class="ncard-title">${l.label.replace('\n',' ')}</div><div class="ncard-meta">${l.papers.length} papers · ${l.domain}</div>`;
+    d.onclick = () => selectNode(l);
+    document.getElementById('labs-list').appendChild(d);
+  });
+  PAPERS_DATA.filter(p => p.type === 'gap').forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'ncard';
+    d.innerHTML = `<div class="ncard-title">${p.label.replace('\n',' ')}</div><div class="ncard-meta">${p.desc.slice(0,55)}...</div>`;
+    d.onclick = () => selectNode(p);
+    document.getElementById('gaps-list').appendChild(d);
+  });
+  PAPERS_DATA.filter(p => p.type === 'bridge').forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'ncard';
+    d.innerHTML = `<div class="ncard-title">${p.label.replace('\n',' ')}</div><div class="ncard-meta">${p.desc.slice(0,55)}...</div>`;
+    d.onclick = () => selectNode(p);
+    document.getElementById('bridges-list').appendChild(d);
+  });
+  document.getElementById('labs-count').textContent = LABS_DATA.length;
+  document.getElementById('gaps-count').textContent = PAPERS_DATA.filter(p => p.type === 'gap').length;
+  document.getElementById('bridges-count').textContent = PAPERS_DATA.filter(p => p.type === 'bridge').length;
+}
+
+function updateStats(){
+  document.getElementById('sn').textContent = PAPERS_DATA.length;
+  document.getElementById('sg').textContent = PAPERS_DATA.filter(p => p.type === 'gap').length;
+  document.getElementById('sl').textContent = LABS_DATA.length;
+}
+
+// ════ GRANTS ════
+let grantFilter = 'all';
+let currentMatches = new Map();
+function buildGrants(matches){
+  const list = document.getElementById('grants-list');
+  list.innerHTML = '';
+  let grants = GRANTS_DATA;
+  if(grantFilter !== 'all') grants = grants.filter(g => g.country === grantFilter);
+  grants.forEach(g => {
+    const isMatch = matches.has(g.id);
+    const d = document.createElement('div');
+    d.className = 'grant-card' + (isMatch ? ' match' : '');
+    d.innerHTML = `
+      <div class="grant-flag"><span>${g.flag} ${g.country} · ${g.agency}</span>${isMatch?'<span class="match-badge">MATCH</span>':''}</div>
+      <div class="grant-title">${g.title}</div>
+      <div class="grant-amount">${g.amount}</div>
+      <div class="grant-themes">${g.themes.slice(0,4).map(t => `<span class="gtheme">${t}</span>`).join('')}</div>
+      <div class="grant-deadline">deadline: ${g.deadline}</div>
+    `;
+    d.onclick = () => qp(`How does my research fit "${g.title}" by ${g.agency}?`);
+    list.appendChild(d);
+  });
+  if(grants.length === 0) list.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px;font-style:italic">no grants match — try selecting a node first</div>';
+}
+function filterGrants(f, btn){
+  grantFilter = f;
+  document.querySelectorAll('.gfilter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildGrants(currentMatches);
+}
+function matchGrants(data){
+  currentMatches = new Map();
+  const themes = (data.themes || []).map(t => t.toLowerCase());
+  GRANTS_DATA.forEach(g => {
+    const gT = g.themes.map(t => t.toLowerCase());
+    let score = 0;
+    themes.forEach(t => { if(gT.some(gt => gt.includes(t) || t.includes(gt))) score++; });
+    if(score >= 1) currentMatches.set(g.id, score);
+  });
+  buildGrants(currentMatches);
+}
+
+// ════ PROMPT ════
+let isLoading = false;
+function addMsg(role, text, themes=[]){
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  if(role === 'assistant') div.innerHTML = `<span class="mlabel">gap.map</span>${text}${themes.length ? `<div class="themes-bar">${themes.map(t => `<span class="theme-chip">${t}</span>`).join('')}</div>` : ''}`;
+  else div.textContent = text;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function semanticHighlight(text){
+  const lower = text.toLowerCase();
+  const matches = new Set();
+  const themes = new Set();
+  const allThemes = new Set();
+  [...PAPERS_DATA, ...LABS_DATA].forEach(d => (d.themes || []).forEach(t => allThemes.add(t.toLowerCase())));
+  allThemes.forEach(t => { if(lower.includes(t)) themes.add(t); });
+  [...PAPERS_DATA, ...LABS_DATA].forEach(d => {
+    const lblM = lower.includes(d.label.replace('\n',' ').toLowerCase());
+    const tM = (d.themes || []).some(t => themes.has(t.toLowerCase()));
+    if(lblM || tM) matches.add(d.id);
+  });
+  return {matches:[...matches], themes:[...themes]};
+}
+
+async function doSend(){
+  const inp = document.getElementById('pinput');
+  const text = inp.value.trim();
+  if(!text || isLoading) return;
+  isLoading = true;
+  addMsg('user', text);
+  inp.value = '';
+  const loading = addMsg('assistant', '');
+  loading.classList.add('loading');
+  loading.querySelector('.mlabel').textContent = 'thinking';
+  
+  const ctx = `You are gap.map intelligence. Graph contains: Labs: ${LABS_DATA.map(l => l.label.replace('\n',' ')).join(', ')}. Papers: ${PAPERS_DATA.length}. Gaps: ${PAPERS_DATA.filter(p => p.type === 'gap').map(p => p.label.replace('\n',' ')).join(', ')}. ${selectedData ? `Selected: "${selectedData.label.replace('\n',' ')}"` : ''} Mention specific node names for highlighting. Under 100 words.`;
+  
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514', max_tokens:600, system:ctx, messages:[{role:'user', content:text}]})
+    });
+    const data = await r.json();
+    const reply = data.content?.find(c => c.type === 'text')?.text || 'No response.';
+    const {matches, themes} = semanticHighlight(reply + ' ' + text);
+    loading.classList.remove('loading');
+    loading.innerHTML = `<span class="mlabel">gap.map</span>${reply}${themes.length ? `<div class="themes-bar">${themes.map(t => `<span class="theme-chip">${t}</span>`).join('')}</div>` : ''}`;
+    if(matches.length > 0 && matches.length < 20){
+      highlightedIds = new Set(matches);
+      setTimeout(() => { highlightedIds = new Set(); }, 6000);
+    }
+  } catch(e){
+    loading.classList.remove('loading');
+    loading.innerHTML = `<span class="mlabel" style="color:var(--coral)">offline</span>using local semantic match`;
+    const {matches, themes} = semanticHighlight(text);
+    if(matches.length > 0){
+      highlightedIds = new Set(matches);
+      setTimeout(() => { highlightedIds = new Set(); }, 6000);
+    }
+  }
+  isLoading = false;
+}
+function qp(text){
+  document.getElementById('pinput').value = text;
+  switchTab('prompt', document.querySelectorAll('.stab')[0]);
+  doSend();
+}
+document.getElementById('pinput').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && (e.metaKey || e.ctrlKey)) doSend();
+});
+
+// ════ RESIZE ════
+window.addEventListener('resize', () => {
+  if(!appInitialised) return;
+  const stage = document.getElementById('stage');
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if(g3_camera){ g3_camera.aspect = w/h; g3_camera.updateProjectionMatrix(); g3_renderer.setSize(w, h); }
+  if(c_camera){ c_camera.aspect = w/h; c_camera.updateProjectionMatrix(); c_renderer.setSize(w, h); }
+  if(currentMode === 'graph2d') initGraph2D();
+});
+</script>
+</body>
+</html>
