@@ -170,7 +170,4 @@ Returns papers, sources used, semantic query metadata, and generated gap nodes.
 - The frontend expects the backend to be running on `http://localhost:8000`.
 - The frontend is served separately on `http://localhost:5500`.
 
-## Author
 
-Mahmoud Ayach
-[github.com/MahmoudAyach496](https://github.com/MahmoudAyach496)
